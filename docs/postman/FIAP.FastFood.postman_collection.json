@@ -96,34 +96,21 @@
 		},
 		{
 			"name": "3 - Get Products by Category",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"cpf\": \"90296682020\",\r\n    \"name\": \"João\",\r\n    \"email\": \"joao@gmail.com\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
 				"url": {
-					"raw": "{{url}}/api/products/GetProductsByCategory?Category=2",
+					"raw": "{{url}}/api/products?category=2",
 					"host": [
 						"{{url}}"
 					],
 					"path": [
 						"api",
-						"products",
-						"GetProductsByCategory"
+						"products"
 					],
 					"query": [
 						{
-							"key": "Category",
+							"key": "category",
 							"value": "2"
 						}
 					]
@@ -190,14 +177,15 @@
 					}
 				},
 				"url": {
-					"raw": "{{url}}/api/payment-update/mercado-pago-qrcode",
+					"raw": "{{url}}/api/webhook/orders/payment",
 					"host": [
 						"{{url}}"
 					],
 					"path": [
 						"api",
-						"payment-update",
-						"mercado-pago-qrcode"
+						"webhook",
+						"orders",
+						"payment"
 					]
 				}
 			},
@@ -209,13 +197,14 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{url}}/api/orders",
+					"raw": "{{url}}/api/orders/ongoing",
 					"host": [
 						"{{url}}"
 					],
 					"path": [
 						"api",
-						"orders"
+						"orders",
+						"ongoing"
 					]
 				}
 			},

@@ -19,40 +19,29 @@ O Tech Challenge Grupo 19 é composto por:
 * [ Postgresql ](https://www.postgresql.org/)
 
 ## Arquitetura
-A arquitetura da aplicação é a hexagonal, seguindo padrões de Domain Driven Design, seguindo a estrutura de aplicações abaixo detalhadas:
-```
-FastFood (solution):
-    API.csproj:
-        Controllers: Endpoints do projeto API
-    Application.csproj: serviços de aplicação
-        UseCases:
-            UseCase.cs: um caso de uso
-        Gateways:
-            IGateway.cs: interface de um recurso externo
-    Domain.csproj: um contexto delimitado qualquer
-        BoundedContext:
-            Model:
-                AggregatedRoot: pasta com nome de uma entidade raiz
-                    AggregatedRoot.cs: entidade raiz do agregado
-                    Entity.cs: outra entidade que faça parte do agregado
-                    IAggregatedRootRepository.cs: repositório do agregado
-                    ValueObject.cs: um objeto de valor do agregado
-            Services:
-                Service.cs: um serviço de domínio
-        IEntity.cs: interface para todas as entidades
-        IAggregatedRoot.cs (implements IEntity): interface para todas as "entidades raiz" de agregados
-        IRepository.cs: interface para todos os repositórios
-        ISpecification.cs: interface para Specification Pattern, utilizado nas validações das regras de domínio
-    Infrastructure.csproj:
-        Gateways:
-            Gateway.cs: implementação de um Application.Gateway
-        Persistence:
-            Repositories:
-                AggregatedRootRepository.cs: repositório de uma "entidade raiz"
-            Data:
-                DataAccessObject.cs: implementação de um DAO (Application.Gateway)
-            Migrations:
-```
+A arquitetura da aplicação é a Clean Architecture. Para a camada Entities, foi adotado o Domain Driven Design.
+Segue a estrutura da aplicação:
+
+    .
+    ├── Drivers                     # Frameworks & Drivers
+        ├── API                     # Web API (.NET 8)
+            ├── HealthChecks
+            └── Routers
+        └── External                # External Interfaces & DB
+            ├── Clients
+            └── Persistence
+                ├── Migrations
+                └── Repositories
+    ├── Adapters                    # Interface Adapters
+        ├── Controllers
+        └── Gateways
+    └── Core                        # Business Rules
+        ├── Application
+            └── UseCases
+        └── Entities (Domain)
+            ├── BoundedContext
+                └── Model           # Aggregates - entities and value objects
+            └── SeedWork            # Reusable classes/interfaces for the domain (by Martin Fowler)
 
 ## Execução
 O projeto pode ser executado utilizando o Docker.
@@ -90,7 +79,7 @@ Obs.: A *connection string* já está configurada corretamente no arquivo *launc
 
 Inicie a Aplicação (API):
 ```shell
-dotnet run --project .\src\API\API.csproj
+dotnet run --project .\src\Drivers\API\API.csproj
 ```
 
 Caso seja necessário derrubar o BD, basta executar:
@@ -113,19 +102,19 @@ O detalhe de cada request, como seus parâmetros e tipos estão detalhadas nas i
 
 ## Produtos
 O sistema já possui uma carga de produtos pré cadastrados para serem utilizados nos testes, você pode acessar a lista de produtos por categoria através do método:
-**[GET] api/products/GetProductsByCategory**.
+`[GET] api/products?category={categoryId}`.
 
 Também é possível criar produtos ou editar, excluir e recuperar produtos pelo seu **id**. Os endpoints são os seguintes:
-- **[GET] api/products/GetProductById**: Deve ser fornecido o id do produto a ser retornado.
-- **[POST] api/products**: Criar um novo produto.
-- **[PUT] api/products**: Atualizar um produto existente da base de dados.
-- **[DELETE] api/products**: Excluir um produto existente da base de dados.
+- `[GET] api/products/{id}`: Deve ser fornecido o id do produto a ser retornado.
+- `[POST] api/products`: Criar um novo produto.
+- `[PUT] api/products`: Atualizar um produto existente da base de dados.
+- `[DELETE] api/products/{id}`: Excluir um produto existente da base de dados.
 
 ### Códigos das Categorias de Produtos
-- **0**: Lanches
-- **1**: Acompanhamentos
-- **2**: Bebidas
-- **3**: Sobremesas
+- `0`: Lanches
+- `1`: Acompanhamentos
+- `2`: Bebidas
+- `3`: Sobremesas
 
 
 ## Clientes
@@ -133,30 +122,31 @@ O sistema dispõe de endpoints para cadastrar clientes para relacioná-los aos p
 Não há carga prévia de dados para clientes.
 
 Há dois endpoints para manipulação do cadastro de clientes:
-- **[POST] api/customers**: Criar um novo cliente caso o CPF já não se encontre na base de dados.
-- **[GET] api/customers**: Retornar um cliente por seu CPF.
+- `[POST] api/customers`: Criar um novo cliente caso o CPF já não se encontre na base de dados.
+- `[GET] api/customers?cpf={cpf}`: Retornar um cliente por seu CPF.
 
 
 ## Pedidos
 Na versão inicial do sistema, é possível criar um pedido, retornar a lista de pedidos existentes e retornar os detalhes de um pedido por seu **id**.
-- **[POST] api/orders**: Criar um novo pedido com o status Pay com os itens e relacionado ao cliente (quando informado).
-- **[GET] api/orders**: Retorna a lista dos pedidos em andamento, ordenada dos mais antigos para os mais novos.
-- **[GET] api/orders/\{id\}**: Retorna o detalhe de um pedido informado pelo **\{id\}**.
+- `[POST] api/orders`: Criar um novo pedido com o status Pay com os itens e relacionado ao cliente (quando informado).
+- `[GET] api/orders/ongoing`: Retorna a lista dos pedidos em andamento, ordenada dos mais antigos para os mais novos.
+- `[POST] api/orders/{id}/status`: Atualiza o status de um pedido específico.
+- `[GET] api/orders/{id}`: Retorna o detalhe de um pedido informado pelo **{id}**.
 
 ### Status dos Pedidos
-- **0**: Pagamento Pendente 
-- **1**: Pagamento Recusado
-- **2**: Pedido Recebido na Cozinha
-- **3**: Cozinha Preparando Pedido
-- **4**: Pedido Pronto
-- **5**: Pedido Concluído
+- `0`: Pagamento Pendente 
+- `1`: Pagamento Recusado
+- `2`: Pedido Recebido na Cozinha
+- `3`: Cozinha Preparando Pedido
+- `4`: Pedido Pronto
+- `5`: Pedido Concluído
 
 
 ## Webhook para atualização de pagamentos
 O sistema, em sua versão 2, terá integração com o Mercado Pago (QrCode dinâmico).
 Na versão atual existe um endpoint que simula uma chamada do Mercado Pago para o sistema.
 Podendo a chamada ser de aceite ou recusa do pagamento.
-- **[POST] api/payment-update/mercado-pago-qrcode**: Endpoint para representar a chamada do mercado pago informando pagamento aceito ou recusado.
+- `[POST] api/webhook/orders/payment`: Endpoint para representar a chamada do mercado pago informando pagamento aceito ou recusado.
 
 ## Fluxo de testes recomendado
 Para testar a aplicação recomendamos primeiro:
